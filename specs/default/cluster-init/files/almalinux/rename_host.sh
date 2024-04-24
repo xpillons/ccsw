@@ -1,9 +1,4 @@
 #!/bin/bash
-# Stop NetworkManager overwriting /etc/resolv.conf
-cat > /etc/NetworkManager/conf.d/90-dns-none.conf << EOF
-[main]
-dns=none
-EOF
 
 function enforce_hostname() {
   local system_hostname=$1
@@ -25,10 +20,11 @@ function enforce_hostname() {
     logger -s "Warning: incorrect /etc/hostname ($etc_hostname), it should be $target_hostname, updating"
     echo $target_hostname > /etc/hostname
   fi
-  eth0_hostname=$(grep DHCP_HOSTNAME /etc/sysconfig/network-scripts/ifcfg-eth0 | cut -d'=' -f2)
-  if [ "$eth0_hostname" != "" -a "$eth0_hostname" != "$target_hostname" ]; then
-    logger -s "Warning: incorrect DHCP_HOSTNAME in /etc/sysconfig/network-scripts/ifcfg-eth0 ($etc_hostname), it should be $target_hostname, updating"
-    sed -i "s/^DHCP_HOSTNAME=.*\$/DHCP_HOSTNAME=$target_hostname/g" /etc/sysconfig/network-scripts/ifcfg-eth0
-    systemctl restart NetworkManager
-  fi
+  # eth0_hostname=$(grep DHCP_HOSTNAME /etc/sysconfig/network-scripts/ifcfg-eth0 | cut -d'=' -f2)
+  # if [ "$eth0_hostname" != "" -a "$eth0_hostname" != "$target_hostname" ]; then
+  #   logger -s "Warning: incorrect DHCP_HOSTNAME in /etc/sysconfig/network-scripts/ifcfg-eth0 ($etc_hostname), it should be $target_hostname, updating"
+  #   sed -i "s/^DHCP_HOSTNAME=.*\$/DHCP_HOSTNAME=$target_hostname/g" /etc/sysconfig/network-scripts/ifcfg-eth0
+  # fi
+  echo "Restarting NetworkManager"
+  systemctl restart NetworkManager
 }
