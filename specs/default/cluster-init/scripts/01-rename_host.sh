@@ -13,8 +13,8 @@ function rename_host() {
   standalone_dns=$(jetpack config cyclecloud.hosts.standalone_dns.enabled | tr '[:upper:]' '[:lower:]')
   if [[ $standalone_dns != "true" ]]; then
     while true; do
-      current_hostname=$(hostname)
-      target_hostname=$(jetpack config cyclecloud.node.name)
+      current_hostname=$(hostname | tr '[:upper:]' '[:lower:]')
+      target_hostname=$(jetpack config cyclecloud.node.name | tr '[:upper:]' '[:lower:]')
 
       if [[ $n -le $max_retry ]]; then
         if [ "$current_hostname" != "$target_hostname" ]; then
