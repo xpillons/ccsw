@@ -24,7 +24,7 @@ function check_host_renaming() {
       logger -s "Target hostname: $target_hostname"
       if [[ $n -le $max_retry ]]; then
         if [[ "$current_hostname" != "$target_hostname" || "$target_hostname" != "$hostname_in_hosts" ]]; then
-          logger -s "$target_hostname not resolvable -  Attempt $n/$max_retry:"
+          logger -s "$target_hostname not fully renamed -  Attempt $n/$max_retry:"
           enforce_hostname $current_hostname $target_hostname
           sleep $delay
           ((n++))
