@@ -10,9 +10,10 @@ function enforce_hostname() {
     hostname $target_hostname
   fi
   logger -s "Check in /etc/hosts"
-  if grep -i $system_hostname /etc/hosts; then
-    logger -s "Warning: incorrect hostname ($system_hostname) in /etc/hosts, updating"
-    sed -i "s/$system_hostname/$target_hostname/ig" /etc/hosts
+  hostname_in_hosts=$(getent hosts $(ifconfig eth0 | grep "inet " | xargs) | xargs | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
+  if grep -i $target_hostname /etc/hosts; then
+    logger -s "Warning: incorrect hostname ($target_hostname) in /etc/hosts, updating"
+    sed -i "s/$hostname_in_hosts/$target_hostname/ig" /etc/hosts
   fi
   logger -s "Check in /etc/hostname"
   etc_hostname=$(</etc/hostname)
