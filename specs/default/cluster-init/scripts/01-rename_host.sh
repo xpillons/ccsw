@@ -1,5 +1,6 @@
 #!/bin/bash
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 source "$script_dir/../files/helpers.sh" 
 read_os
 
@@ -12,26 +13,26 @@ function check_host_renaming() {
 
   standalone_dns=$(jetpack config cyclecloud.hosts.standalone_dns.enabled | tr '[:upper:]' '[:lower:]')
   if [[ $standalone_dns != "true" ]]; then
+    # Get the target hostname
+    target_hostname=$(jetpack config cyclecloud.node.name | tr '[:upper:]' '[:lower:]')
     while true; do
       # Get current hostname
       current_hostname=$(hostname | tr '[:upper:]' '[:lower:]')
       # Get hostname associated with the IP address
       hostname_in_hosts=$(getent hosts $(ifconfig eth0 | grep "inet " | xargs) | xargs | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
-      # Get the target hostname
-      target_hostname=$(jetpack config cyclecloud.node.name | tr '[:upper:]' '[:lower:]')
       logger -s "Current hostname: $current_hostname"
       logger -s "Hostname returned by 'getent hosts': $hostname_in_hosts"
       logger -s "Target hostname: $target_hostname"
+      if [[ "$current_hostname" != "$target_hostname" || "$target_hostname" != "$hostname_in_hosts" ]]; then
+        logger -s "$target_hostname not fully renamed -  Attempt $n/$max_retry:"
+        enforce_hostname $current_hostname $target_hostname
+      else
+        logger -s "hostname successfully renamed to $target_hostname"
+        break
+      fi
       if [[ $n -le $max_retry ]]; then
-        if [[ "$current_hostname" != "$target_hostname" || "$target_hostname" != "$hostname_in_hosts" ]]; then
-          logger -s "$target_hostname not fully renamed -  Attempt $n/$max_retry:"
-          enforce_hostname $current_hostname $target_hostname
-          sleep $delay
-          ((n++))
-        else
-          logger -s "hostname successfully renamed to $target_hostname"
-          break
-        fi
+        sleep $delay
+        ((n++))
       else
         logger -s "Failed to rename host $target_hostname after $max_retry attempts."
         exit 1
