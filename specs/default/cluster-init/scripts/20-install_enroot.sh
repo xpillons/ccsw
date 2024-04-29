@@ -1,0 +1,48 @@
+#!/bin/bash
+
+os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
+enroot_version=3.1.0
+
+# Install or update enroot if necessary
+if [ "$(enroot version)" != "$enroot_version" ] ; then
+    echo Updating enroot to $enroot_version
+    case $os_release in
+        rhel|almalinux|rocky)
+            yum remove -y enroot enroot+caps
+            arch=$(uname -m)
+            yum install -y https://github.com/NVIDIA/enroot/releases/download/v${enroot_version}/enroot-${enroot_version}-1.el8.${arch}.rpm
+            yum install -y https://github.com/NVIDIA/enroot/releases/download/v${enroot_version}/enroot+caps-${enroot_version}-1.el8.${arch}.rpm
+            ;;
+        ubuntu|debian)
+            arch=$(dpkg --print-architecture)
+            curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${enroot_version}/enroot_${enroot_version}-1_${arch}.deb
+            curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${enroot_version}/enroot+caps_${enroot_version}-1_${arch}.deb
+            apt install -y ./*.deb
+            ;;
+    esac
+else
+    echo Enroot is already at version $enroot_version
+fi
+
+# enroot default scratch dir to /mnt/resource
+ENROOT_SCRATCH_DIR=/mnt/resource
+if [ -d /mnt/nvme ]; then
+    # If /mnt/nvme exists, use it as the default scratch dir
+    ENROOT_SCRATCH_DIR=/mnt/nvme
+fi
+
+mkdir -pv /run/enroot $ENROOT_SCRATCH_DIR/{enroot-cache,enroot-data,enroot-temp,enroot-runtime}
+chmod -v 777 /run/enroot $ENROOT_SCRATCH_DIR/{enroot-cache,enroot-data,enroot-temp,enroot-runtime}
+
+# Use local temporary disk for enroot
+cat <<EOF > /etc/enroot/enroot.conf
+ENROOT_RUNTIME_PATH /run/enroot/user-\$(id -u)
+ENROOT_CACHE_PATH $ENROOT_SCRATCH_DIR/enroot-cache/user-\$(id -u)
+ENROOT_DATA_PATH $ENROOT_SCRATCH_DIR/enroot-data/user-\$(id -u)
+ENROOT_TEMP_PATH $ENROOT_SCRATCH_DIR/enroot-temp
+ENROOT_SQUASH_OPTIONS -noI -noD -noF -noX -no-duplicates
+ENROOT_MOUNT_HOME y
+ENROOT_RESTRICT_DEV y
+ENROOT_ROOTFS_WRITABLE y
+MELLANOX_VISIBLE_DEVICES all
+EOF
