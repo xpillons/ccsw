@@ -18,7 +18,7 @@ if [ ! -d /opt/pmix/v4 ]; then
     esac
     # Build PMIx
     logger -s "Build PMIx"
-    cd /mnt/resource
+    cd /mnt/scratch
     rm -rf openpmix
     git clone --recursive https://github.com/openpmix/openpmix.git
     cd openpmix

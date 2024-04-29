@@ -24,8 +24,8 @@ else
     logger -s  Enroot is already at version $enroot_version
 fi
 
-# enroot default scratch dir to /mnt/resource
-ENROOT_SCRATCH_DIR=/mnt/resource
+# enroot default scratch dir to /mnt/scratch
+ENROOT_SCRATCH_DIR=/mnt/scratch
 if [ -d /mnt/nvme ]; then
     # If /mnt/nvme exists, use it as the default scratch dir
     ENROOT_SCRATCH_DIR=/mnt/nvme
