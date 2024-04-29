@@ -5,7 +5,7 @@ enroot_version=3.4.1
 
 # Install or update enroot if necessary
 if [ "$(enroot version)" != "$enroot_version" ] ; then
-    echo Updating enroot to $enroot_version
+    logger -s  Updating enroot to $enroot_version
     case $os_release in
         rhel|almalinux|rocky)
             yum remove -y enroot enroot+caps
@@ -21,7 +21,7 @@ if [ "$(enroot version)" != "$enroot_version" ] ; then
             ;;
     esac
 else
-    echo Enroot is already at version $enroot_version
+    logger -s  Enroot is already at version $enroot_version
 fi
 
 # enroot default scratch dir to /mnt/resource
@@ -35,6 +35,7 @@ mkdir -pv /run/enroot $ENROOT_SCRATCH_DIR/{enroot-cache,enroot-data,enroot-temp,
 chmod -v 777 /run/enroot $ENROOT_SCRATCH_DIR/{enroot-cache,enroot-data,enroot-temp,enroot-runtime}
 
 # Use local temporary disk for enroot
+logger -s "Use $ENROOT_SCRATCH_DIR for enroot cache"
 cat <<EOF > /etc/enroot/enroot.conf
 ENROOT_RUNTIME_PATH /run/enroot/user-\$(id -u)
 ENROOT_CACHE_PATH $ENROOT_SCRATCH_DIR/enroot-cache/user-\$(id -u)

@@ -5,9 +5,11 @@ set -e
 # if the /opt/pmix/v4 directory is not present, then install PMIx
 if [ ! -d /opt/pmix/v4 ]; then
     os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
+    logger -s "Installing PMIx dependencies for $os_release"
     case $os_release in
         rhel|almalinux)
-            dnf -y install autoconf flex libevent-devel git
+            dnf config-manager --set-enabled powertools
+            dnf -y install autoconf flex libevent-devel git hwloc-devel
             ;;
         ubuntu|debian)
             apt-get update
@@ -15,7 +17,8 @@ if [ ! -d /opt/pmix/v4 ]; then
             ;;
     esac
     # Build PMIx
-    cd /mnt/scratch
+    logger -s "Build PMIx"
+    cd /mnt/resource
     rm -rf openpmix
     git clone --recursive https://github.com/openpmix/openpmix.git
     cd openpmix
@@ -23,15 +26,18 @@ if [ ! -d /opt/pmix/v4 ]; then
     ./autogen.pl
     ./configure --prefix=/opt/pmix/v4
     make -j install
+    logger -s "PMIx Sucessfully Installed"
 fi
 
 # Exit if Enroot is not in the image
 [ -d /etc/enroot ] || exit 0
 
 # Install extra hooks for PMIx
+logger -s "Install extra hooks for PMIx"
 cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
 
 [ -d /etc/sysconfig ] || mkdir -pv /etc/sysconfig
 # Add variables for PMIx
+logger -s "Add Slurm variables for PMIx"
 sed -i '/EnvironmentFile/a Environment=PMIX_MCA_ptl=^usock PMIX_MCA_psec=none PMIX_SYSTEM_TMPDIR=/var/empty PMIX_MCA_gds=hash HWLOC_COMPONENTS=-opencl' /usr/lib/systemd/system/slurmd.service
 systemctl daemon-reload
