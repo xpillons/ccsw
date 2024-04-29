@@ -27,17 +27,21 @@ if [ ! -d /opt/pmix/v4 ]; then
     ./configure --prefix=/opt/pmix/v4
     make -j install
     logger -s "PMIx Sucessfully Installed"
+
+    ln -s /opt/pmix/v4/lib/libpmix.so /usr/lib/libpmix.so
+    systemctl restart slurmd
+    systemctl status slurmd
 fi
 
 # Exit if Enroot is not in the image
-[ -d /etc/enroot ] || exit 0
+# [ -d /etc/enroot ] || exit 0
 
-# Install extra hooks for PMIx
-logger -s "Install extra hooks for PMIx"
-cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
+# # Install extra hooks for PMIx
+# logger -s "Install extra hooks for PMIx"
+# cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
 
-[ -d /etc/sysconfig ] || mkdir -pv /etc/sysconfig
-# Add variables for PMIx
-logger -s "Add Slurm variables for PMIx"
-sed -i '/EnvironmentFile/a Environment=PMIX_MCA_ptl=^usock PMIX_MCA_psec=none PMIX_SYSTEM_TMPDIR=/var/empty PMIX_MCA_gds=hash HWLOC_COMPONENTS=-opencl' /usr/lib/systemd/system/slurmd.service
-systemctl daemon-reload
+# [ -d /etc/sysconfig ] || mkdir -pv /etc/sysconfig
+# # Add variables for PMIx
+# logger -s "Add Slurm variables for PMIx"
+# sed -i '/EnvironmentFile/a Environment=PMIX_MCA_ptl=^usock PMIX_MCA_psec=none PMIX_SYSTEM_TMPDIR=/var/empty PMIX_MCA_gds=hash HWLOC_COMPONENTS=-opencl' /usr/lib/systemd/system/slurmd.service
+# systemctl daemon-reload
