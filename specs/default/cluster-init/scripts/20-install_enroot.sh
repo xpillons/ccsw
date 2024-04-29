@@ -1,7 +1,7 @@
 #!/bin/bash
 
 os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
-enroot_version=3.1.0
+enroot_version=3.4.1
 
 # Install or update enroot if necessary
 if [ "$(enroot version)" != "$enroot_version" ] ; then
