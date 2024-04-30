@@ -3,7 +3,8 @@ set -e
 PMIX_VERSION=4.2.9
 PMIX_DIR=/opt/pmix/$PMIX_VERSION
 
-function build_pmix() {
+function build_pmix()
+{
     # Build PMIx
     logger -s "Build PMIx"
     cd /mnt/scratch
@@ -25,6 +26,27 @@ function build_pmix() {
     logger -s "PMIx Sucessfully Installed"
 }
 
+function configure_slurmd()
+{
+    while [ ! -f /etc/sysconfig/slurmd ]
+    do
+        sleep 2
+    done
+    grep -q PMIX_MCA /etc/sysconfig/slurmd
+    pmix_is_not_set=$?
+    if [ $pmix_is_not_set ]; then
+        # slurmd environment variables for PMIx
+cat <<EOF >> /etc/sysconfig/slurmd
+
+PMIX_MCA_ptl=^usock
+PMIX_MCA_psec=none
+PMIX_SYSTEM_TMPDIR=/var/empty
+PMIX_MCA_gds=hash
+HWLOC_COMPONENTS=-opencl
+EOF
+    fi
+}
+
 # Install PMIx if not present in the image
 # if the $PMIX_DIR directory is not present, then install PMIx
 if [ ! -d $PMIX_DIR ]; then
@@ -43,7 +65,7 @@ if [ ! -d $PMIX_DIR ]; then
             ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
             ;;
     esac
-
+    configure_slurmd
     systemctl restart slurmd
 fi
 
@@ -54,8 +76,4 @@ fi
 # logger -s "Install extra hooks for PMIx"
 # cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
 
-# [ -d /etc/sysconfig ] || mkdir -pv /etc/sysconfig
-# # Add variables for PMIx
-# logger -s "Add Slurm variables for PMIx"
-# sed -i '/EnvironmentFile/a Environment=PMIX_MCA_ptl=^usock PMIX_MCA_psec=none PMIX_SYSTEM_TMPDIR=/var/empty PMIX_MCA_gds=hash HWLOC_COMPONENTS=-opencl' /usr/lib/systemd/system/slurmd.service
-# systemctl daemon-reload
+
