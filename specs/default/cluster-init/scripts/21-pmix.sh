@@ -32,8 +32,10 @@ function configure_slurmd()
     do
         sleep 2
     done
+    set +e
     grep -q PMIX_MCA /etc/sysconfig/slurmd
     pmix_is_not_set=$?
+    set -e
     if [ $pmix_is_not_set ]; then
         # slurmd environment variables for PMIx
 cat <<EOF >> /etc/sysconfig/slurmd
