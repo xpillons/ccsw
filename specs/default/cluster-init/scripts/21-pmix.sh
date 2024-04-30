@@ -2,8 +2,10 @@
 set -e
 
 # Install PMIx if not present in the image
-# if the /opt/pmix/v4 directory is not present, then install PMIx
-if [ ! -d /opt/pmix/v4 ]; then
+PMIX_DIR=/opt/pmix/v4
+PMIX_VERSION=4.2.9
+# if the $PMIX_DIR directory is not present, then install PMIx
+if [ ! -d $PMIX_DIR ]; then
     os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
     logger -s "Installing PMIx dependencies for $os_release"
     case $os_release in
@@ -13,22 +15,31 @@ if [ ! -d /opt/pmix/v4 ]; then
             ;;
         ubuntu|debian)
             apt-get update
-            apt-get install -y git libevent-dev libhwloc-dev autoconf flex make gcc libxml2
+            #apt-get install -y git libevent-dev libhwloc-dev autoconf flex make gcc libxml2
+            apt-get install -y libevent-dev libhwloc-dev
             ;;
     esac
     # Build PMIx
     logger -s "Build PMIx"
     cd /mnt/scratch
-    rm -rf openpmix
-    git clone --recursive https://github.com/openpmix/openpmix.git
-    cd openpmix
-    git checkout v4.2.9
+	rm -rf pmix-${PMIX_VERSION}
+    wget -q https://github.com/openpmix/openpmix/releases/download/v$PMIX_VERSION/pmix-$PMIX_VERSION.tar.gz
+    tar -xzf pmix-$PMIX_VERSION.tar.gz
+    cd pmix-$PMIX_VERSION
+
+    # rm -rf openpmix
+    # git clone --recursive https://github.com/openpmix/openpmix.git
+    # cd openpmix
+    # git checkout v$PMIX_VERSION
     ./autogen.pl
-    ./configure --prefix=/opt/pmix/v4
+    ./configure --prefix=$PMIX_DIR
     make -j install
+	cd ..
+	rm -rf pmix-${PMIX_VERSION}
+    rm pmix-$PMIX_VERSION.tar.gz
     logger -s "PMIx Sucessfully Installed"
 
-    ln -s /opt/pmix/v4/lib/libpmix.so /usr/lib/libpmix.so
+    ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
     systemctl restart slurmd
     systemctl status slurmd
 fi
