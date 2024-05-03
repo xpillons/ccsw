@@ -1,43 +1,20 @@
 #!/bin/bash
 set -e
-PMIX_VERSION=4.2.9
-PMIX_DIR=/opt/pmix/$PMIX_VERSION
+PMIX_ROOT=/opt/pmix
 
-function build_pmix()
-{
-    # Build PMIx
-    logger -s "Build PMIx"
-    cd /mnt/scratch
-	rm -rf pmix-${PMIX_VERSION}
-    wget -q https://github.com/openpmix/openpmix/releases/download/v$PMIX_VERSION/pmix-$PMIX_VERSION.tar.gz
-    tar -xzf pmix-$PMIX_VERSION.tar.gz
-    cd pmix-$PMIX_VERSION
-
-    # rm -rf openpmix
-    # git clone --recursive https://github.com/openpmix/openpmix.git
-    # cd openpmix
-    # git checkout v$PMIX_VERSION
-    ./autogen.pl
-    ./configure --prefix=$PMIX_DIR
-    make -j install
-	cd ..
-	rm -rf pmix-${PMIX_VERSION}
-    rm pmix-$PMIX_VERSION.tar.gz
-    logger -s "PMIx Sucessfully Installed"
-}
+logger -s "Configuring PMIx"
 
 function configure_slurmd()
 {
-    while [ ! -f /etc/sysconfig/slurmd ]
-    do
-        sleep 2
-    done
+    logger -s "Configure PMIx in Slurm service"
+    [ -d /etc/sysconfig ] || mkdir -pv /etc/sysconfig
     set +e
     grep -q PMIX_MCA /etc/sysconfig/slurmd
     pmix_is_not_set=$?
     set -e
     if [ $pmix_is_not_set ]; then
         # slurmd environment variables for PMIx
+        logger -s "Set PMIx environment variables in slurmd"
 cat <<EOF >> /etc/sysconfig/slurmd
 
 PMIX_MCA_ptl=^usock
@@ -46,36 +23,57 @@ PMIX_SYSTEM_TMPDIR=/var/empty
 PMIX_MCA_gds=hash
 HWLOC_COMPONENTS=-opencl
 EOF
+    logger -s "Restart slurmd service to apply PMIx configuration"
+    systemctl restart slurmd
     fi
 }
 
-# Install PMIx if not present in the image
-# if the $PMIX_DIR directory is not present, then install PMIx
-if [ ! -d $PMIX_DIR ]; then
-    os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
-    case $os_release in
-        rhel|almalinux)
-            logger -s "Installing PMIx $PMIX_VERSION for $os_release"
-            yum -y install pmix-$PMIX_VERSION-1.el8
-            ;;
-        ubuntu|debian)
-            logger -s "Installing PMIx dependencies for $os_release"
-            apt-get update
-            #apt-get install -y git libevent-dev libhwloc-dev autoconf flex make gcc libxml2
-            apt-get install -y libevent-dev libhwloc-dev
-            build_pmix
-            ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
-            ;;
-    esac
-    configure_slurmd
-    systemctl restart slurmd
+# Configure PMIx if present in the image
+# for these versions and above, PMIx is installed
+#   - almalinux:almalinux-hpc:8_7-hpc-gen2:8.7.2024042601
+#   - microsoft-dsvm:ubuntu-hpc:2004:20.04.2024043001
+#   - microsoft-dsvm:ubuntu-hpc:2204:22.04.2024043001
+#
+os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
+os_version=$(cat /etc/os-release | grep "^VERSION_ID\=" | cut -d'=' -f2 | xargs)
+# if the $PMIX_ROOT directory is not present, then exit on error as PMIx is required
+if [ ! -d $PMIX_ROOT ]; then
+    logger -s "PMIx root directory $PMIX_ROOT not found"
+    exit 0
 fi
 
-# Exit if Enroot is not in the image
-# [ -d /etc/enroot ] || exit 0
+logger -s "Configuring PMIx for $os_release $os_version"
 
-# # Install extra hooks for PMIx
-# logger -s "Install extra hooks for PMIx"
-# cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
+case $os_release in
+    almalinux)
+        # Works out of the box
+        ;;
+    ubuntu)
+        case $os_version in
+            20.04)
+                PMIX_VERSION=4.2.9
+                PMIX_DIR=$PMIX_ROOT/$PMIX_VERSION
+                ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/x86_64-linux-gnu/libpmix.so
+                # ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
+                ;;
+            22.04)
+                PMIX_VERSION=4.2.9
+                PMIX_DIR=$PMIX_ROOT/$PMIX_VERSION
+                ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/x86_64-linux-gnu/libpmix.so
+                # ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
+                ;;
+            *)
+                logger -s "Untested OS $os_release $os_version"
+                exit 1
+                ;;
+        esac
+        ;;
+    *)
+        logger -s "Untested OS $os_release $os_version"
+        exit 1
+        ;;
+esac
 
 
+configure_slurmd
+logger -s "PMIx configured successfully"
