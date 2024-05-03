@@ -1,9 +1,12 @@
 #!/bin/bash
+# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
+
 set -e
 PMIX_ROOT=/opt/pmix
 
 logger -s "Configuring PMIx"
 
+# TODO: Try not to change the slurmd configuration file, instead use the environment variables in the job script
 function configure_slurmd()
 {
     logger -s "Configure PMIx in Slurm service"

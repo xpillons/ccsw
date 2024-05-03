@@ -1,4 +1,6 @@
 #!/bin/bash
+# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
+
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 source "$script_dir/../files/helpers.sh" 

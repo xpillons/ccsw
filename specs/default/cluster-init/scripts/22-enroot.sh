@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
 
 os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
 enroot_version=3.4.1

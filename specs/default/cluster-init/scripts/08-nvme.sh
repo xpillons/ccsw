@@ -1,4 +1,5 @@
 #!/bin/bash
+# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
 
 NVME_DISKS_NAME=`ls /dev/nvme*n1`
 NVME_DISKS=`ls -latr /dev/nvme*n1 | wc -l`
