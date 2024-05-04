@@ -1,9 +1,6 @@
 #!/bin/bash
-# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
-
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-source "$script_dir/../files/helpers.sh" 
+source "$script_dir/../files/common.sh" 
 read_os
 
 source $script_dir/../files/$os_release/rename_host.sh
@@ -61,4 +58,6 @@ function check_host_renaming() {
   fi
 }
 
-check_host_renaming
+if is_compute; then
+  check_host_renaming
+fi

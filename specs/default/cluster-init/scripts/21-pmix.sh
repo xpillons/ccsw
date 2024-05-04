@@ -1,5 +1,7 @@
 #!/bin/bash
-# TODO : Only run this script on compute nodes, use jetpack to retrieve the node type.
+script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+source "$script_dir/../files/common.sh" 
+read_os
 
 set -e
 PMIX_ROOT=/opt/pmix
@@ -37,46 +39,43 @@ EOF
 #   - microsoft-dsvm:ubuntu-hpc:2004:20.04.2024043001
 #   - microsoft-dsvm:ubuntu-hpc:2204:22.04.2024043001
 #
-os_release=$(cat /etc/os-release | grep "^ID\=" | cut -d'=' -f 2 | xargs)
-os_version=$(cat /etc/os-release | grep "^VERSION_ID\=" | cut -d'=' -f2 | xargs)
-# if the $PMIX_ROOT directory is not present, then exit on error as PMIx is required
-if [ ! -d $PMIX_ROOT ]; then
-    logger -s "PMIx root directory $PMIX_ROOT not found"
-    exit 0
+function configure_pmix()
+{
+    # if the $PMIX_ROOT directory is not present, then exit on error as PMIx is required
+    if [ ! -d $PMIX_ROOT ]; then
+        logger -s "PMIx root directory $PMIX_ROOT not found"
+        exit 0
+    fi
+
+    logger -s "Configuring PMIx for $os_release $os_version"
+
+    case $os_release in
+        almalinux)
+            # Works out of the box
+            ;;
+        ubuntu)
+            case $os_version in
+                20.04 | 22.04)
+                    PMIX_VERSION=4.2.9
+                    PMIX_DIR=$PMIX_ROOT/$PMIX_VERSION
+                    ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/x86_64-linux-gnu/libpmix.so
+                    # ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
+                    ;;
+                *)
+                    logger -s "Untested OS $os_release $os_version"
+                    exit 0
+                    ;;
+            esac
+            ;;
+        *)
+            logger -s "Untested OS $os_release $os_version"
+            exit 0
+            ;;
+    esac
+}
+
+if is_compute; then
+    configure_pmix
+    #configure_slurmd
 fi
-
-logger -s "Configuring PMIx for $os_release $os_version"
-
-case $os_release in
-    almalinux)
-        # Works out of the box
-        ;;
-    ubuntu)
-        case $os_version in
-            20.04)
-                PMIX_VERSION=4.2.9
-                PMIX_DIR=$PMIX_ROOT/$PMIX_VERSION
-                ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/x86_64-linux-gnu/libpmix.so
-                # ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
-                ;;
-            22.04)
-                PMIX_VERSION=4.2.9
-                PMIX_DIR=$PMIX_ROOT/$PMIX_VERSION
-                ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/x86_64-linux-gnu/libpmix.so
-                # ln -s $PMIX_DIR/lib/libpmix.so /usr/lib/libpmix.so
-                ;;
-            *)
-                logger -s "Untested OS $os_release $os_version"
-                exit 1
-                ;;
-        esac
-        ;;
-    *)
-        logger -s "Untested OS $os_release $os_version"
-        exit 1
-        ;;
-esac
-
-
-configure_slurmd
 logger -s "PMIx configured successfully"
