@@ -1,7 +1,9 @@
 #!/bin/bash
+set -e
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$script_dir/../files/common.sh" 
 
+PYXIS_VERSION=0.19.0
 SHARED_DIR=/sched/pyxis
 
 function link_plugstack() {
@@ -25,7 +27,7 @@ function install_pyxis_library() {
 }
 
 function build_pyxis() {
-   # download source code in /mnt/scratch
+
    logger -s "Downloading Pyxis source code $PYXIS_VERSION"
 
    cd /tmp
