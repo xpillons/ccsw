@@ -35,11 +35,16 @@ function install_enroot() {
 
 function configure_enroot() 
 {
-    # enroot default scratch dir to /mnt/scratch
-    ENROOT_SCRATCH_DIR=/mnt/scratch
+    # enroot default scratch dir to /mnt/enrot
+    # If NVMe disks exists link /mnt/enroot to /mnt/nvme/enroot
+    ENROOT_SCRATCH_DIR=/mnt/enroot
     if [ -d /mnt/nvme ]; then
         # If /mnt/nvme exists, use it as the default scratch dir
-        ENROOT_SCRATCH_DIR=/mnt/nvme
+        mkdir -pv /mnt/nvme/enroot
+        ln -s /mnt/nvme/enroot /mnt/enroot
+    else
+        mkdir -pv /mnt/scratch/enroot
+        ln -s /mnt/nvme/enroot /mnt/enroot
     fi
 
     logger -s "Creating enroot scratch directories in $ENROOT_SCRATCH_DIR"

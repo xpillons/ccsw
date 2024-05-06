@@ -15,8 +15,7 @@ function install_plugstack() {
    mkdir -p /sched/plugstack.conf.d
    echo 'include /sched/plugstack.conf.d/*' > /sched/plugstack.conf
    chown -R slurm:slurm /sched/plugstack.conf
-   # TODO : Need to confirm the path for runtime_path
-   echo 'required /usr/lib64/slurm/spank_pyxis.so runtime_path=/mnt/scratch/enroot-runtime' > /sched/plugstack.conf.d/pyxis.conf
+   echo 'required /usr/lib64/slurm/spank_pyxis.so runtime_path=/mnt/enroot/enroot-runtime' > /sched/plugstack.conf.d/pyxis.conf
    chown slurm:slurm /sched/plugstack.conf.d/pyxis.conf
 }
 
