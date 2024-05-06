@@ -1,9 +1,9 @@
 #!/bin/bash
+set -ex
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$script_dir/../files/common.sh" 
 read_os
 
-set -e
 PMIX_ROOT=/opt/pmix
 
 logger -s "Configuring PMIx"
