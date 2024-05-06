@@ -1,12 +1,10 @@
 #!/bin/bash
-set -ex
+set -e
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$script_dir/../files/common.sh" 
 read_os
 
 PMIX_ROOT=/opt/pmix
-
-logger -s "Configuring PMIx"
 
 # TODO: Try not to change the slurmd configuration file, instead use the environment variables in the job script
 function configure_slurmd()
@@ -73,6 +71,8 @@ function configure_pmix()
             ;;
     esac
 }
+
+logger -s "Configuring PMIx"
 
 if is_compute; then
     configure_pmix

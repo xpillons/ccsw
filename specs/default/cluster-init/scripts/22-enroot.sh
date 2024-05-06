@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$script_dir/../files/common.sh" 
 read_os
@@ -65,7 +65,7 @@ EOF
     cp -fv /usr/share/enroot/hooks.d/50-slurm-pmi.sh /usr/share/enroot/hooks.d/50-slurm-pytorch.sh /etc/enroot/hooks.d
 }
 
-if [ is_compute ]; then
+if is_compute ; then
     install_enroot
     configure_enroot
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-set -ex
+set -e
 script_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 source "$script_dir/../files/common.sh" 
 
@@ -44,7 +44,7 @@ function build_pyxis() {
    chmod +x ${SHARED_DIR}/spank_pyxis.so
 }
 
-if [ is_scheduler ]; then
+if is_scheduler; then
    logger -s "Build Pyxis library"
    build_pyxis
 
