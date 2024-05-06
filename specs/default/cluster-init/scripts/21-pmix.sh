@@ -72,10 +72,9 @@ function configure_pmix()
     esac
 }
 
-logger -s "Configuring PMIx"
-
 if is_compute; then
+    logger -s "Configuring PMIx"
     configure_pmix
     #configure_slurmd
+    logger -s "PMIx configured successfully"
 fi
-logger -s "PMIx configured successfully"
