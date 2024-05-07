@@ -18,7 +18,7 @@ function install_enroot() {
                 sysctl -p /etc/sysctl.d/userns.conf
 
                 arch=$(uname -m)
-                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$arch.run
+                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$(uname -m).run
                 chmod 755 enroot-check_*.run
                 ./enroot-check_*.run --verify
 
@@ -27,7 +27,7 @@ function install_enroot() {
                 ;;
             ubuntu)
                 arch=$(dpkg --print-architecture)
-                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$arch.run
+                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$(uname -m).run
                 chmod 755 enroot-check_*.run
                 ./enroot-check_*.run --verify
 
