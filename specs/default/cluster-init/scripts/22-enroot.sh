@@ -13,12 +13,24 @@ function install_enroot() {
         case $os_release in
             almalinux)
                 yum remove -y enroot enroot+caps
+                # Enroot requires user namespaces to be enabled
+                echo "user.max_user_namespaces=32" > /etc/sysctl.d/userns.conf
+                sysctl -p /etc/sysctl.d/userns.conf
+
                 arch=$(uname -m)
+                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$arch.run
+                chmod 755 enroot-check_*.run
+                ./enroot-check_*.run --verify
+
                 yum install -y https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-${ENROOT_VERSION}-1.el8.${arch}.rpm
                 yum install -y https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot+caps-${ENROOT_VERSION}-1.el8.${arch}.rpm
                 ;;
             ubuntu)
                 arch=$(dpkg --print-architecture)
+                curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot-check_${ENROOT_VERSION}_$arch.run
+                chmod 755 enroot-check_*.run
+                ./enroot-check_*.run --verify
+
                 curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot_${ENROOT_VERSION}-1_${arch}.deb
                 curl -fSsL -O https://github.com/NVIDIA/enroot/releases/download/v${ENROOT_VERSION}/enroot+caps_${ENROOT_VERSION}-1_${arch}.deb
                 apt install -y ./*.deb
@@ -44,7 +56,7 @@ function configure_enroot()
         ln -s /mnt/nvme/enroot /mnt/enroot
     else
         mkdir -pv /mnt/scratch/enroot
-        ln -s /mnt/nvme/enroot /mnt/enroot
+        ln -s /mnt/scratch/enroot /mnt/enroot
     fi
 
     logger -s "Creating enroot scratch directories in $ENROOT_SCRATCH_DIR"
